@@ -1,0 +1,246 @@
+@import 'tailwindcss';
+
+/*
+  University of Mumbai — CGPA → Percentage
+  Identity: examination blue-book / transcript ledger.
+  Ink-navy + brass-seal on warm laid paper.
+*/
+
+@theme {
+  --font-serif: 'Fraunces', ui-serif, Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* Ink-navy — the registrar's pen */
+  --color-ink-950: #0a1124;
+  --color-ink-900: #101a36;
+  --color-ink-800: #16244a;
+  --color-ink-700: #1d2f5e;
+  --color-ink-600: #294079;
+  --color-ink-500: #3a5494;
+
+  /* Brass seal — wax & embossing */
+  --color-brass-600: #8a6a2a;
+  --color-brass-500: #a8853c;
+  --color-brass-400: #c4a052;
+  --color-brass-300: #d9bd78;
+  --color-brass-200: #ecd9a8;
+
+  /* Laid paper / parchment */
+  --color-paper-50: #faf6ec;
+  --color-paper-100: #f4ecd9;
+  --color-paper-200: #ebe0c4;
+  --color-paper-300: #ddcfa8;
+
+  /* Examination crimson — the official stamp */
+  --color-stamp-600: #8c2b22;
+  --color-stamp-500: #ab3a2c;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-ink-900);
+    background-color: var(--color-ink-950);
+  }
+
+  /* Numeric / ledger inputs read as mono everywhere */
+  input[type='number'],
+  select {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Strip the spinner buttons; the form is a transcript, not a calculator pad */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  ::selection {
+    background: var(--color-brass-300);
+    color: var(--color-ink-950);
+  }
+}
+
+@layer components {
+  /* Warm laid-paper texture: faint horizontal rules + fibre grain */
+  .paper-laid {
+    background-color: var(--color-paper-50);
+    background-image:
+      linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 27px,
+        rgba(16, 26, 54, 0.05) 27px,
+        rgba(16, 26, 54, 0.05) 28px
+      ),
+      radial-gradient(rgba(138, 106, 42, 0.06) 1px, transparent 1px);
+    background-size: 100% 28px, 9px 9px;
+  }
+
+  /* Deep cover stock for the outer shell */
+  .cover-stock {
+    background-color: var(--color-ink-950);
+    background-image:
+      radial-gradient(
+        140% 120% at 50% -10%,
+        rgba(58, 84, 148, 0.32) 0%,
+        rgba(16, 26, 54, 0) 55%
+      ),
+      repeating-linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.014) 0px,
+        rgba(255, 255, 255, 0.014) 1px,
+        transparent 1px,
+        transparent 6px
+      );
+  }
+
+  /* Brass guilloché edge for the conversion seal */
+  .seal-ring {
+    background:
+      conic-gradient(
+        from 0deg,
+        var(--color-brass-500),
+        var(--color-brass-300) 12%,
+        var(--color-brass-600) 25%,
+        var(--color-brass-300) 38%,
+        var(--color-brass-500) 50%,
+        var(--color-brass-300) 62%,
+        var(--color-brass-600) 75%,
+        var(--color-brass-300) 88%,
+        var(--color-brass-500) 100%
+      );
+  }
+
+  .field-rule {
+    background-image: linear-gradient(
+      to right,
+      var(--color-ink-700) 0,
+      var(--color-ink-700) 60%,
+      transparent 60%,
+      transparent 100%
+    );
+    background-size: 8px 1px;
+    background-repeat: repeat-x;
+    background-position: bottom;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .ligatures-discretionary {
+    font-feature-settings: 'dlig' 1, 'swsh' 1;
+  }
+}
+
+/* ── Stamp-in animation for the seal ─────────────────────────── */
+@keyframes stamp-in {
+  0% {
+    transform: scale(1.18) rotate(-7deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.97) rotate(1deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+.animate-stamp {
+  animation: stamp-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes ink-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-ink-rise {
+  animation: ink-rise 0.5s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-stamp,
+  .animate-ink-rise {
+    animation: none;
+  }
+}
+
+/* ── Print: collapse to an official statement ────────────────── */
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block;
+  }
+  .print-plain {
+    background: #fff !important;
+    box-shadow: none !important;
+    border-color: #000 !important;
+  }
+  .print-flat-input {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    color: #000 !important;
+  }
+  .paper-laid {
+    background-image: none !important;
+    background: #fff !important;
+  }
+  /* Drop the dark cover stock so the statement prints on white */
+  .cover-stock {
+    background: #fff !important;
+    background-image: none !important;
+  }
+  /* Flatten the semester cards to plain ledgers */
+  .print-plain {
+    color: #000 !important;
+    box-shadow: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    border: 1px solid #000 !important;
+  }
+  main {
+    padding-top: 0 !important;
+    display: block !important;
+  }
+}
