@@ -32,6 +32,16 @@ export interface Semester {
   label: string
   /** Raw CGPA entry for this semester (clamped on derivation/blur). */
   cgpa: number | null
+  /** Total marks for this semester — used to derive obtained marks. */
+  totalMarks: number | null
+}
+
+/** Clamp arbitrary input to a non-negative total-marks value, or null. */
+export function clampMarks(value: unknown): number | null {
+  if (value === '' || value === null || value === undefined) return null
+  const n = Number(value)
+  if (Number.isNaN(n) || n < 0) return null
+  return n
 }
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII']
@@ -40,7 +50,12 @@ let uid = 0
 const nextId = () => ++uid
 
 function makeSemester(index: number): Semester {
-  return { id: nextId(), label: `Semester ${ROMAN[index] ?? index + 1}`, cgpa: null }
+  return {
+    id: nextId(),
+    label: `Semester ${ROMAN[index] ?? index + 1}`,
+    cgpa: null,
+    totalMarks: null,
+  }
 }
 
 export function useCgpa() {
@@ -56,25 +71,31 @@ export function useCgpa() {
     semesterCount.value = count
   }
 
-  /** Reconcile a semester's field to a clamped value (used on blur). */
+  /** Reconcile a semester's fields to clamped values (used on blur). */
   function normalizeSemester(sem: Semester) {
     sem.cgpa = clampCgpa(sem.cgpa)
+    sem.totalMarks = clampMarks(sem.totalMarks)
   }
 
   function reset() {
     semesters.forEach((s) => {
       s.cgpa = null
+      s.totalMarks = null
     })
   }
 
-  /** Per-semester clamped CGPA and its percentage. */
+  /** Per-semester clamped CGPA, its percentage, and derived obtained marks. */
   const semesterResults = computed(() =>
     activeSemesters.value.map((sem) => {
       const value = clampCgpa(sem.cgpa)
+      const percent = value === null ? null : toPercentage(value)
+      const total = clampMarks(sem.totalMarks)
       return {
         id: sem.id,
         cgpa: value,
-        percent: value === null ? null : toPercentage(value),
+        percent,
+        total,
+        obtained: percent === null || total === null ? null : (percent / 100) * total,
       }
     }),
   )
@@ -86,6 +107,20 @@ export function useCgpa() {
   )
 
   const countedSemesters = computed(() => enteredCgpas.value.length)
+
+  /** Sum of total marks across semesters where both marks and CGPA are entered. */
+  const totalMarks = computed<number | null>(() => {
+    const rows = semesterResults.value.filter((r) => r.obtained !== null)
+    if (rows.length === 0) return null
+    return rows.reduce((sum, r) => sum + (r.total ?? 0), 0)
+  })
+
+  /** Sum of obtained marks across semesters with a derived figure. */
+  const obtainedMarks = computed<number | null>(() => {
+    const rows = semesterResults.value.filter((r) => r.obtained !== null)
+    if (rows.length === 0) return null
+    return rows.reduce((sum, r) => sum + (r.obtained ?? 0), 0)
+  })
 
   /** Overall CGPA — mean of the entered semester CGPAs. */
   const cgpa = computed<number | null>(() => {
@@ -113,6 +148,8 @@ export function useCgpa() {
     // derived
     semesterResults,
     countedSemesters,
+    totalMarks,
+    obtainedMarks,
     cgpa,
     percentage,
     hasData,

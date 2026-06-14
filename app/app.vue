@@ -7,6 +7,8 @@ const {
   reset,
   semesterResults,
   countedSemesters,
+  totalMarks,
+  obtainedMarks,
   cgpa,
   percentage,
   hasData,
@@ -15,6 +17,11 @@ const {
 const cgpaDisplay = computed(() => (cgpa.value === null ? '—' : cgpa.value.toFixed(2)))
 const pctDisplay = computed(() =>
   percentage.value === null ? '—' : percentage.value.toFixed(2),
+)
+const marksDisplay = computed(() =>
+  obtainedMarks.value === null || totalMarks.value === null
+    ? '—'
+    : `${obtainedMarks.value.toFixed(2)} / ${totalMarks.value.toFixed(0)}`,
 )
 
 const today = new Date().toLocaleDateString('en-GB', {
@@ -147,6 +154,10 @@ function doPrint() {
             <div>
               <dt class="font-mono text-[9px] uppercase tracking-[0.2em] text-ink-500">Overall CGPA</dt>
               <dd class="font-mono text-lg font-semibold tabular-nums text-paper-100">{{ cgpaDisplay }}</dd>
+            </div>
+            <div class="col-span-2 border-t border-ink-700/40 pt-3">
+              <dt class="font-mono text-[9px] uppercase tracking-[0.2em] text-ink-500">Obtained / Total marks</dt>
+              <dd class="font-mono text-lg font-semibold tabular-nums text-brass-300">{{ marksDisplay }}</dd>
             </div>
           </dl>
 

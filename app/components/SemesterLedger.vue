@@ -6,6 +6,8 @@ interface RowResult {
   id: number
   cgpa: number | null
   percent: number | null
+  total: number | null
+  obtained: number | null
 }
 
 const props = defineProps<{
@@ -17,8 +19,16 @@ const emit = defineEmits<{
   normalize: [sem: Semester]
 }>()
 
+function resultFor(id: number): RowResult | undefined {
+  return props.results.find((r) => r.id === id)
+}
+
 function percentFor(id: number): number | null {
-  return props.results.find((r) => r.id === id)?.percent ?? null
+  return resultFor(id)?.percent ?? null
+}
+
+function obtainedFor(id: number): number | null {
+  return resultFor(id)?.obtained ?? null
 }
 </script>
 
@@ -29,7 +39,7 @@ function percentFor(id: number): number | null {
       <div>
         <h2 class="font-serif text-lg font-semibold leading-tight">Semester-wise Conversion</h2>
         <p class="font-mono text-[10px] uppercase tracking-[0.24em] text-brass-300/80">
-          CGPA → Percentage per semester
+          CGPA → Percentage → Marks per semester
         </p>
       </div>
       <span class="rounded-sm border border-brass-500/40 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-brass-300">
@@ -38,11 +48,13 @@ function percentFor(id: number): number | null {
     </header>
 
     <!-- column captions -->
-    <div class="grid grid-cols-[1.75rem_1fr_6rem_6rem] items-center gap-2 border-b border-ink-900/15 px-4 py-2 font-mono text-[9px] uppercase tracking-[0.16em] text-ink-500 sm:px-6">
+    <div class="grid grid-cols-[1.75rem_1fr_5.5rem_5rem_5.5rem_5rem] items-center gap-2 border-b border-ink-900/15 px-4 py-2 font-mono text-[9px] uppercase tracking-[0.16em] text-ink-500 sm:px-6">
       <span>#</span>
       <span>Semester</span>
       <span class="text-center">CGPA</span>
       <span class="text-right">Percentage</span>
+      <span class="text-center">Total marks</span>
+      <span class="text-right">Obtained</span>
     </div>
 
     <!-- rows -->
@@ -50,7 +62,7 @@ function percentFor(id: number): number | null {
       <li
         v-for="(sem, i) in semesters"
         :key="sem.id"
-        class="grid grid-cols-[1.75rem_1fr_6rem_6rem] items-center gap-2 border-b border-dashed border-ink-900/12 px-4 py-2.5 last:border-b-0 sm:px-6"
+        class="grid grid-cols-[1.75rem_1fr_5.5rem_5rem_5.5rem_5rem] items-center gap-2 border-b border-dashed border-ink-900/12 px-4 py-2.5 last:border-b-0 sm:px-6"
       >
         <span class="grid h-6 w-6 place-items-center rounded-sm bg-ink-900 font-mono text-[11px] font-semibold text-paper-50">
           {{ i + 1 }}
@@ -69,7 +81,7 @@ function percentFor(id: number): number | null {
             step="0.01"
             placeholder="—"
             :aria-label="`CGPA for ${sem.label}`"
-            class="print-flat-input w-16 rounded-[3px] bg-paper-100/70 px-1.5 py-1 text-center text-sm text-ink-900 placeholder:text-ink-500/40 focus:bg-paper-200 focus:outline-none focus:ring-1 focus:ring-brass-500/60"
+            class="print-flat-input w-14 rounded-[3px] bg-paper-100/70 px-1.5 py-1 text-center text-sm text-ink-900 placeholder:text-ink-500/40 focus:bg-paper-200 focus:outline-none focus:ring-1 focus:ring-brass-500/60"
             @blur="emit('normalize', sem)"
           />
           <span class="font-mono text-[11px] text-ink-500">/10</span>
@@ -81,6 +93,29 @@ function percentFor(id: number): number | null {
           :class="percentFor(sem.id) === null ? 'text-ink-500' : 'text-brass-600'"
         >
           {{ percentFor(sem.id) === null ? '—' : percentFor(sem.id)!.toFixed(2) + '%' }}
+        </span>
+
+        <!-- total marks input -->
+        <div class="flex items-center justify-center">
+          <input
+            v-model.number="sem.totalMarks"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            placeholder="—"
+            :aria-label="`Total marks for ${sem.label}`"
+            class="print-flat-input w-16 rounded-[3px] bg-paper-100/70 px-1.5 py-1 text-center text-sm text-ink-900 placeholder:text-ink-500/40 focus:bg-paper-200 focus:outline-none focus:ring-1 focus:ring-brass-500/60"
+            @blur="emit('normalize', sem)"
+          />
+        </div>
+
+        <!-- derived obtained marks -->
+        <span
+          class="text-right font-mono text-sm font-semibold tabular-nums"
+          :class="obtainedFor(sem.id) === null ? 'text-ink-500' : 'text-ink-900'"
+        >
+          {{ obtainedFor(sem.id) === null ? '—' : obtainedFor(sem.id)!.toFixed(2) }}
         </span>
       </li>
     </ul>
